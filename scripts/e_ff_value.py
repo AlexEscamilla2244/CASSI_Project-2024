@@ -11,7 +11,7 @@ Options:
 -h --help                  Show this screen>                                                                                                                                        
 --BoxSize=<BX>             Box size of the simulation (defaults to 100)                                                                                                             
 --Cutoff=<cutoff>          Cutoff density where star formation efficiency is calculated (defaults to 100)                                                                                                                                                                                              
---output_path              output path for data (defaults to /E_FFvalue in parent directory)                                                                                       
+--output_path              output path for data (defaults to /E_FFvalue in file 1 parent directory)                                                                                       
 """
 
 from scipy.spatial import KDTree
@@ -78,7 +78,7 @@ def SFE_values(path1,path2,CUTOFF, Box_Size, OUTPATH):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-       outdir = "/work2/10071/alexescamilla2244/frontera/output" + "/E_FF" + str(CUTOFF) + "_values/"
+       outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF" + str(CUTOFF) + "_values/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname

@@ -63,7 +63,7 @@ def age(path):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-        outdir ="/work2/10071/alexescamilla2244/frontera/output" + "/YSOobjects/"
+        outdir = str(pathlib.Path(path).parent.resolve())  + "/YSOobjects/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname

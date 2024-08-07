@@ -12,7 +12,7 @@ Options:
 --BoxSize=<BX>             Box size of the simulation (defaults to 100)
 --Starting_Range=<R_i>     Starting range of density cutoff (defaults to 65)
 --Ending_Range=<R_f>       Ending range of density cutoff (defaults to 2500)
---output_path              output path for data (defaults to /E_FF_range in parent directory )         
+--output_path              output path for data (defaults to /E_FF_range in file1 directory )         
 """
 
 from scipy.spatial import KDTree
@@ -80,7 +80,7 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH):
     
         #Calculating e_ff
         new_G = G.to(u.pc**3/(u.solMass * u.Myr**2))
-    
+        
         T_ff = (new_G* (M_Gas / np.sum(A** (3/2))))**(-1/2)
         star_efficiency = (StarRate / (M_Gas / T_ff)).value
         e_ff_range.append(star_efficiency)
@@ -90,7 +90,7 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-        outdir = "/work2/10071/alexescamilla2244/frontera/output" + "/E_FF/"
+        outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname

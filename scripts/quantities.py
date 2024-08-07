@@ -106,7 +106,7 @@ def Quantities(path1, path2, CUTOFF, Box_Size, OUTPATH):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-       outdir = "/work2/10071/alexescamilla2244/frontera/output" + "/E_FF" + str(CUTOFF) + "_Quantities/"
+       outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF" + str(CUTOFF) + "_Quantities/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname
