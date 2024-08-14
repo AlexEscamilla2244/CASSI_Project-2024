@@ -10,7 +10,7 @@ Options:
                                                                                                                                                                                     
 -h --help                  Show this screen>                                                                                                                                        
 --BoxSize=<BX>             Box size of the simulation (defaults to 100)                                                                                                             
---Cutoff=<cutoff>          Cutoff density where star formation efficiency is calculated (defaults to 100)                                                                                                                                                                                              
+--Cutoff=<cutoff>          Cutoff density where star formation efficiency is calculated (defaults to 500)                                                                                                                                                                                              
 --output_path              output path for data (defaults to /E_FFvalue in file 1 parent directory)                                                                                       
 """
 
@@ -41,7 +41,8 @@ def SFE_values(path1,path2,CUTOFF, Box_Size, OUTPATH):
         Y = F["Y_pc"][:]
         Surface_Den = F["SurfaceDensity_Msun_pc2"][:]
         
-    #Flattening out Density and Dust Coordinates                                                                                                                              
+        
+        #Flattening out Density and Dust Coordinates                                      
     new_den = (Surface_Den.flatten()) * (u.solMass / u.pc**2)
     dust_cords = np.c_[X.flatten(), Y.flatten()]
 
@@ -55,7 +56,8 @@ def SFE_values(path1,path2,CUTOFF, Box_Size, OUTPATH):
     #Calculating Star Formation Rate                                                                                                                                               
     NumYSOs = df["YSOs"]
     yso_surface_den = df["YSO Surface Den"]
-    StarRate = (((yso_surface_den > CUTOFF).sum() * 0.5) /  0.5) * (u.solMass / u.Myr)
+    num_yso_at_surface_den = (yso_surface_den > CUTOFF).sum()
+    StarRate = (((num_yso_at_surface_den * 0.5) /  0.5) * (u.solMass / u.Myr))
 
     # Calculating Area                                                                                                                                                          
     surface_unit = 1 * (u.solMass / u.pc**2)
@@ -65,12 +67,14 @@ def SFE_values(path1,path2,CUTOFF, Box_Size, OUTPATH):
     A = np.sum(Mask) *  A_i
 
     #Calculating Mass_Gas                                                                                                                                                      
-    M_Gas = np.sum(A_i * new_den[Mask] )
+    M_Gas = np.sum(A_i * new_den[Mask])
 
     #Calculating e_ff                                                                                                                                                           
     new_G = G.to(u.pc**3/(u.solMass * u.Myr**2))
 
-    T_ff = (new_G* (M_Gas / np.sum(A** (3/2))))**(-1/2)
+    t_ff_num = np.sum(A**(3/2)) * np.sqrt(np.pi)
+    t_ff_denom = (8 * new_G * M_Gas)
+    T_ff = np.sqrt(t_ff_num/t_ff_denom)
     star_efficiency = (StarRate / (M_Gas / T_ff)).value
     e_ff.append(star_efficiency)
     
@@ -78,6 +82,7 @@ def SFE_values(path1,path2,CUTOFF, Box_Size, OUTPATH):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
+       #outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/E_FF" + str(CUTOFF) + "_values/"
        outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF" + str(CUTOFF) + "_values/"
     if not isdir(outdir):
         mkdir(outdir)

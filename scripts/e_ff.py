@@ -86,7 +86,9 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
         #Calculating e_ff
         new_G = (G.to(u.pc**3/(u.solMass * u.Myr**2))).value
         
-        T_ff = (new_G* (M_Gas / np.sum(A** (3/2))))**(-1/2)
+        t_ff_num = np.sum(A**(3/2)) * np.sqrt(np.pi)
+        t_ff_denom = (8 * new_G * M_Gas)
+        T_ff = np.sqrt(t_ff_num/t_ff_denom)
         star_efficiency = (StarRate / (M_Gas / T_ff)).value
         e_ff_range.append(star_efficiency)
         N_YSOS.append(num_yso_at_surface_den)
@@ -98,7 +100,8 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-        outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/E_FF/"
+        #outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/E_FF/"
+        outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname

@@ -51,13 +51,14 @@ def Quantities(path1, path2, CUTOFF, Box_Size, OUTPATH):
         X = F["X_pc"][:]
         Y = F["Y_pc"][:]
         Surface_Den = F["SurfaceDensity_Msun_pc2"][:]
-    
+        time =(F["Header"].attrs["Time"] * u.pc / (u.meter/u.second)).to(u.Myr)
     #lists for the quantities that will be displayed
 
     N_YSOS = []
     Mass_Gass = []
     Area = []
     tff = []
+    t = []
     #Flattening out Density and Dust Coordinates                                                                                                                                    
     new_den = (Surface_Den.flatten()) * (u.solMass / u.pc**2)
     dust_cords = np.c_[X.flatten(), Y.flatten()]
@@ -88,9 +89,11 @@ def Quantities(path1, path2, CUTOFF, Box_Size, OUTPATH):
         M_Gas = (np.sum(A_i * new_den[Mask])).value
 
         #Calculating e_ff                                                                                                                                                               
-        new_G = G.to(u.pc**3/(u.solMass * u.Myr**2))
+        new_G = G.to(u.pc**3/(u.solMass * u.Myr**2)).value
 
-        T_ff = ((new_G* (M_Gas / np.sum(A** (3/2))))**(-1/2)).value
+        t_ff_num = np.sum(A**(3/2)) * np.sqrt(np.pi)
+        t_ff_denom = (8 * new_G * M_Gas)
+        T_ff = np.sqrt(t_ff_num/t_ff_denom)
     
     
 
@@ -100,13 +103,13 @@ def Quantities(path1, path2, CUTOFF, Box_Size, OUTPATH):
         Mass_Gass.append(M_Gas)
         Area.append(A)
         tff.append(T_ff)
-    
+        t.append(time)
     #Creatiing File and Datasets
     fname =  os.path.basename(path1).replace(".YSOobjects.hdf5", ".quantities.hdf5")
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-       outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF" + str(CUTOFF) + "_Quantities/"
+       outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/E_FF" + str(CUTOFF) + "_Quantities/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname
@@ -116,6 +119,7 @@ def Quantities(path1, path2, CUTOFF, Box_Size, OUTPATH):
         F.create_dataset("M_Gas", data=Mass_Gass)
         F.create_dataset("Area", data=Area)
         F.create_dataset("T_ff", data=tff)
+        F.create_dataset("t", data=t)
     
         
 def main():
