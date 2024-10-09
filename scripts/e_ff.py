@@ -40,6 +40,7 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
     with h5py.File(path1, "r") as A:
         YSO_X = (A["X_pc"][:])
         YSO_Y = (A["Y_pc"][:])
+        YSO_Mass = (A["Solar Masses"][:])
 
     #Getting Dust Coordinates
     with h5py.File(path2, "r") as F:
@@ -55,24 +56,38 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
     targets = np.c_[YSO_X.flatten(), YSO_Y.flatten()]
     T = KDTree(dust_cords)
     dist, idx = T.query(targets)
-    df = pd.DataFrame({ "YSOs" : targets[:,0], "YSO Surface Den" : new_den[idx]})
+    df = pd.DataFrame({ "YSOs" : targets[:,0], "YSO Surface Den" : new_den[idx], "YSO Mass" : YSO_Mass})
 
    
     # Calculating Star Formation Rate
     NumYSOs = df["YSOs"]
     yso_surface_den = df["YSO Surface Den"]
-
+    yso_mass = df["YSO Mass"]
+    
     e_ff_range = []
+    e_ff_range_diff_mass = []
     N_YSOS = []
     Mass_Gass = []
     Area = []
     tff = []
+    m_total = []
+    m_median = []
+    m_average = []
+    m_max = []
+    
     for i in np.arange(R_I,R_F,1):
         num_yso_at_surface_den = (yso_surface_den > i).sum()
         StarRate = (((num_yso_at_surface_den * 0.5) /  0.5) * (u.solMass\
  / u.Myr))
+        no_assumption_SFR = (((num_yso_at_surface_den * np.mean(df["YSO Mass"][yso_surface_den > i])) /  0.5) * (u.solMass\
+ / u.Myr))
 
-    
+        #Getting Star Statistics
+        
+        mean_mass = np.mean(df["YSO Mass"][yso_surface_den > i])
+        m_tot = np.sum(df["YSO Mass"][yso_surface_den > i])
+        m_med = np.median(df["YSO Mass"][yso_surface_den > i])
+        
         # Calculating Area 
         surface_unit = 1 * (u.solMass / u.pc**2)
         L = Box_Size / 5
@@ -90,18 +105,24 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
         t_ff_denom = (8 * new_G * M_Gas)
         T_ff = np.sqrt(t_ff_num/t_ff_denom)
         star_efficiency = (StarRate / (M_Gas / T_ff)).value
+        star_efficiency_diff_mass = (no_assumption_SFR / (M_Gas / T_ff)).value
+        
         e_ff_range.append(star_efficiency)
         N_YSOS.append(num_yso_at_surface_den)
         Mass_Gass.append(M_Gas)
         Area.append(A)
         tff.append(T_ff)
+        e_ff_range_diff_mass.append(star_efficiency_diff_mass)
+        m_average.append(mean_mass)
+        m_total.append(m_tot)
+        m_median.append(m_med)
 
     fname = path1.split("/")[-1].replace(".YSOobjects.hdf5", ".e_ff_range.hdf5")   
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-        #outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/E_FF/"
-        outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF/"
+        outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output" + "/Diff_Mass_E_FF/"
+        #outdir = str(pathlib.Path(path1).parent.resolve()) + "/E_FF/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname
@@ -111,8 +132,10 @@ def SFE_values(path1,path2, Box_Size, R_I, R_F, OUTPATH, RES):
         F.create_dataset("M_Gas", data=Mass_Gass)
         F.create_dataset("Area", data=Area)
         F.create_dataset("T_ff", data=tff)
-
-
+        F.create_dataset("SFE_Values_Different_Masses", data=e_ff_range_diff_mass)
+        F.create_dataset("Average_YSO_Mass", data=m_average)
+        F.create_dataset("M_total", data=m_total)
+        F.create_dataset("M_median", data=m_median)
    
 
 

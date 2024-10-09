@@ -44,18 +44,21 @@ def age(path):
     Xcords = []
     Ycords = []
     lum = []
+    mass = []
     with h5py.File(path,"r") as F:
         Simulation_time = (F["Header"].attrs["Time"] * conversion_time).value
         X_Coordinates = (F["PartType5/Coordinates"][:,0])
         Y_Coordinates = (F["PartType5/Coordinates"][:,1])
         Luminosity = (F["PartType5/StarLuminosity_Solar"][:])
         Star_Formation  = (F["PartType5/ProtoStellarAge"][:] * conversion_time).value
+        Masses = (F["/PartType5/Masses"][:])
         for i in range(len(Star_Formation)):
             t =  Simulation_time - Star_Formation[i]
             if t <= TAU:
                 Xcords.append(X_Coordinates[i])
                 Ycords.append(Y_Coordinates[i])
                 lum.append(Luminosity[i])
+                mass.append(Masses[i])
             else:
                 continue
     fname = path.split("/")[-1].replace(".hdf5", ".YSOobjects.hdf5")
@@ -63,7 +66,7 @@ def age(path):
     if OUTPATH:
         imgpath = OUTPATH + fname
     else:
-        outdir = str(pathlib.Path(path).parent.resolve())  + "/YSOobjects/"
+        outdir = "/work2/10071/alexescamilla2244/frontera/CASSI_Project-2024/output"  + "/YSOobjects/"
     if not isdir(outdir):
         mkdir(outdir)
     imgpath = outdir + fname
@@ -71,6 +74,7 @@ def age(path):
         F.create_dataset("X_pc", data=Xcords)
         F.create_dataset("Y_pc", data=Ycords)
         F.create_dataset("Luminosity", data=lum)
+        F.create_dataset("Solar_Masses", data=mass)
 
 
 
